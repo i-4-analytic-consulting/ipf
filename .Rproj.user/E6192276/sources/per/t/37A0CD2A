@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556813402421.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2604333372",
+    "id" : "37A0CD2A",
+    "lastKnownWriteTime" : 1556819541,
+    "last_content_update" : 1556819541626,
+    "path" : "F:/R Projects/ipf/ipf_test.r",
+    "project_path" : "ipf_test.r",
+    "properties" : {
+        "cursorPosition" : "42,0",
+        "scrollLine" : "31",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

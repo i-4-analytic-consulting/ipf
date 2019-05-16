@@ -1,0 +1,122 @@
+library(dplyr);
+
+####
+# IPF 
+###
+
+tar1 <- read.csv("Target1.csv", stringsAsFactors = FALSE)
+tar1 <- filter(tar1, Year == 2015)
+tar2 <- read.csv("Target2.csv", stringsAsFactors = FALSE)
+tar2 <- filter(tar2, Year == 2015)
+
+###
+# Seed
+###
+
+u.country <- unique(tar1$Country)
+u.measure <- unique(tar1$Measure)
+u.product <- unique(tar1$Product)
+u.segment <- unique(tar1$Segment)
+u.vertical <- unique(tar2$Vertical)
+u.year <- unique(tar2$Year)
+
+seed <- expand.grid(Measure = u.measure, Country = u.country, Segment = u.segment, Product = u.product,
+                    Year = u.year)
+
+seed$value <- 1 #Unary seed
+seed$value <- rnorm(nrow(seed), 100, 20) #Random seed
+
+###
+# IPF
+###
+
+k0 <- seed
+
+#1 - scale to target 1
+
+
+k1 <- k0 %>%
+  left_join(tar1) %>% #Bring in tar 1
+  group_by(Measure, Country, Product, Segment, Year) %>% #Group by dimensions in Target 1
+  mutate(share = value / sum(value, na.rm=TRUE)) %>% #Get share for each group member
+  ungroup() %>%
+  mutate(value = share * target) %>%
+  select(-share, -target)
+
+k2 <- k1 %>%
+  left_join(tar2) %>%
+  group_by(Measure, Country, Vertical, Esize, Year) %>%
+  mutate(share = value / sum(value, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate( value = share * target) %>%
+  select(-share, -target)
+
+#Check our errors
+e1 <- k2 %>%
+  group_by(Measure, Country, Product, Segment, Year) %>% #Group by dimensions in Target 1
+  summarize(value = sum(value, na.rm=TRUE)) %>%
+  ungroup() %>%
+  left_join(tar1) %>%
+  mutate(error = target - value)
+
+error <- sum(abs(e1$error), na.rm=TRUE)
+
+####
+# Looping the IPF
+####
+
+tolerance <- 0.001
+
+#Iterations
+iterations <- 0
+
+#Error starting
+error <- 100000 + tolerance
+
+#Set seed
+k0 <- seed
+
+#While loop
+
+while( (error > tolerance) & (iterations < 20)) { #start loop
+  
+    k1 <- k0 %>%
+    left_join(tar1) %>% #Bring in tar 1
+    group_by(Measure, Country, Product, Segment, Year) %>% #Group by dimensions in Target 1
+    mutate(share = value / sum(value, na.rm=TRUE)) %>% #Get share for each group member
+    ungroup() %>%
+    mutate(value = share * target) %>%
+    select(-share, -target)
+  
+  k2 <- k1 %>%
+    left_join(tar2) %>%
+    group_by(Measure, Country, Vertical, Esize, Year) %>%
+    mutate(share = value / sum(value, na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate( value = share * target) %>%
+    select(-share, -target)
+
+  #Check our errors
+  e1 <- k2 %>%
+    group_by(Measure, Country, Product, Segment, Year) %>% #Group by dimensions in Target 1
+    summarize(value = sum(value, na.rm=TRUE)) %>%
+    ungroup() %>%
+    left_join(tar1) %>%
+    mutate(error = target - value)
+  
+  error <- sum(abs(e1$error), na.rm=TRUE)
+  
+  #Difference 1 from 1-iteration above - reset K0
+  k0 <- k2
+  
+  #Difference 2
+  iterations <- iterations + 1
+  
+  #Difference 3
+  print(paste("Iteration:", iterations, "       ", "Error:", error))
+  
+} # end loop
+
+
+
+  
